@@ -162,8 +162,6 @@ rel_sum_com <- indicators %>%
   .$lambda3 %>%
   .$Unstandardized
 
-# var_sum <- var(rowMeans(indicators))
-
 toutcome <- function(dataset) {
   ttest <-
     t.test(dataset$sum_compatible, dataset$sum_incompatible, paired = T)
@@ -203,4 +201,3 @@ for (obj in c("outcomeall",
 }
 
 fitMeasures(fit)
-#summary(fit, fit.measures=TRUE)
