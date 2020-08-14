@@ -3,7 +3,7 @@ library(lavaan)
 library(tidyverse)
 library(doRNG)
 library(doParallel)
-#### data generation 
+##### data generation 
 ncores <- -1 + detectCores()
 
 create_model <- function(ntrials) {
@@ -230,28 +230,6 @@ results_ntrials2_5 <- foreach(
 }
 stopCluster(cl)
 
-## for Mac: Multi cores
-# results_multi <- do.call(mcmapply,
-# c(
-# FUN = run_sim,
-# conditions,
-# mc.cores = ncores,
-# SIMPLIFY = FALSE
-# ))
-# allresults <- results_multi %>% bind_rows()
-
-
-## SINGLE CORE
-# results_single_ntrials2_5 <-
-#     apply(conditions, 1, function(cond)
-#         run_sim(
-#             sample_size = cond[1],
-#             effect_size = cond[2],
-#             ntrials = cond[3]
-#         ))
-# results_single_ntrials2_5 <- results_single_ntrials2_5 %>% bind_rows()
-##
-
 
 #### ntrials = 18 divided averagely into 6 groups, thus in output 6
 group <- 6
@@ -317,37 +295,14 @@ results_ntrials18 <- foreach(
 }
 stopCluster(cl)
 
-
-## for Mac: Multi cores
-# results_multi <- do.call(mcmapply,
-# c(
-# FUN = run_sim,
-# conditions,
-# mc.cores = ncores,
-# SIMPLIFY = FALSE
-# ))
-# results_multi <- results_multi %>% bind_rows()
-# allresults <- bind_rows(allresults, results_multi)
-
-
-## SINGLE CORE
-# results_single_ntrials18 <-
-#     apply(conditions, 1, function(cond)
-#         run_sim(
-#             sample_size = cond[1],
-#             effect_size = cond[2],
-#             ntrials = cond[3]
-#         ))
-# results_single_ntrials18 <- results_single_ntrials18 %>% bind_rows()
-# ##
-
+           
 allresults <- bind_rows(results_ntrials2_5, results_ntrials18)
 
 library(feather)
 write_feather(allresults, "allresults.feather")
 
 
-#### data analysis
+##### data analysis
 error_improper_results <- allresults %>%
         group_by(sample_size, effect_size, ntrials, method) %>%
         summarise(
@@ -439,7 +394,7 @@ analyze(allcleaned, "allcleaned")
 analyze(allresults, "all")
 
 
-#### plotting
+##### plotting
 fontsize <- 10 # between 8 to 14
 width <- 16.5
 
@@ -720,34 +675,6 @@ plotting <- function(compareresults, type) {
     units = "cm",
     height = 17
   )
-  
-  ## p rate for all conditions
-  # reference <-
-  # data.frame(effect_size = c(0),
-  # ref = c(0.05))
-  # ggplot(data = compareresults) +
-  # geom_bar(
-  # mapping = aes(
-  # x = ntrials,
-  # y = p_rate ,
-  # fill = method
-  # ),
-  # stat = "identity",
-  # position = "dodge"
-  # ) +
-  # facet_grid(effect_size ~ sample_size, scales = "fixed") +
-  # theme_bw() +
-  # ylim(0, 1) +
-  # labs(y = expression(paste("rate of ", italic("p"), " < 0.05"))) +
-  # scale_fill_manual(values = c("aquamarine3", "darkgreen")) +
-  # geom_hline(
-  # aes(yintercept = ref),
-  # reference,
-  # color = "purple",
-  # alpha = 0.6,
-  # lwd = 0.2
-  # )
-  # ggsave(paste("p_rate ", type, ".png", sep = ""))
 }
 
 
@@ -828,29 +755,3 @@ ggsave(
   units = "cm",
   height = 17
 )
-
-## rate of errors and improper solutions
-# ggplot(data = error_improper_LDS) +
-# geom_bar(
-# mapping = aes(x = ntrials,
-# y = error_rate),
-# stat = "identity",
-# position = "dodge",
-# fill = "aquamarine3"
-# ) +
-# facet_grid(effect_size ~ sample_size, scales = "fixed") +
-# theme_bw() +
-# labs(y = "rate of estimation errors")
-# ggsave("errors.png")
-# ggplot(data = error_improper_LDS) +
-# geom_bar(
-# mapping = aes(x = ntrials,
-# y = improper_rate),
-# stat = "identity",
-# position = "dodge",
-# fill = "aquamarine3"
-# ) +
-# facet_grid(effect_size ~ sample_size, scales = "fixed") +
-# theme_bw() +
-# labs(y = "rate of improper solutions")
-# ggsave("improper solutions.png")
