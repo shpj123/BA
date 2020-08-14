@@ -438,3 +438,419 @@ analyze(impropercleaned, "impropercleaned")
 analyze(allcleaned, "allcleaned")
 analyze(allresults, "all")
 
+
+#### plotting
+fontsize <- 10 # between 8 to 14
+width <- 16.5
+
+paneltitle <- function(vector) {
+  title <- vector()
+  for (string in vector) {
+    if (is.element(string, c("20", "40", "80"))) {
+      string <- paste("Sample Size: ", string)
+    } else {
+      string <- paste("Effect Size: ", string)
+    }
+    title <- append(title,
+                    string)
+  }
+  title
+}
+
+plotting <- function(compareresults, type) {
+  typeI <-
+    ggplot(data = compareresults[compareresults$effect_size == 0,]) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = p_rate,
+                    fill = method),
+      stat = "identity",
+      position = "dodge"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    )  +
+    theme_bw() +
+    labs(y = expression(paste("Rate of ", italic("p"), " < .05")),
+         x = "Reliability",
+         fill = "") +
+    scale_fill_manual(
+      values = c("aquamarine3", "darkgreen"),
+      labels = c("LDS Model", expression(paste(
+        italic("t"), "-Test"
+      )))
+    ) +
+    geom_hline(
+      aes(yintercept = 0.05),
+      color = "purple",
+      alpha = 0.8,
+      lwd = 0.5
+    ) +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    ) +
+    scale_y_continuous(labels = scales::percent) +
+    coord_cartesian(ylim = c(0, 0.08))
+  
+  power <-
+    ggplot(data = compareresults[compareresults$effect_size != 0,]) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = p_rate,
+                    fill = method),
+      stat = "identity",
+      position = "dodge"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    ) +
+    theme_bw() +
+    coord_cartesian(ylim = c(0, 1)) +
+    labs(y = expression(paste("Rate of ", italic("p"), " < .05")),
+         x = "Reliability",
+         fill = "") +
+    scale_fill_manual(
+      values = c("aquamarine3", "darkgreen"),
+      labels = c("LDS Model", expression(paste(
+        italic("t"), "-Test"
+      )))
+    ) +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    ) +
+    scale_y_continuous(labels = scales::percent)
+  
+  advantage = compareresults %>%
+    filter(effect_size != 0) %>%
+    select(method, p_rate, sample_size, effect_size, ntrials) %>%
+    spread(key = method, value = p_rate) %>%
+    group_by(sample_size, effect_size, ntrials) %>%
+    mutate(poweradvantage = LDS - `t-Test`)
+  
+  poweradvantage <- ggplot(data = advantage) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = poweradvantage),
+      fill = "aquamarine3",
+      stat = "identity"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    ) +
+    theme_bw() +
+    labs(y = "Power Advantage of LDS Model",
+         x = "Reliability",
+         fill = "") +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    ) +
+    scale_y_continuous(labels = scales::percent)
+  
+  ddeviation <- ggplot(data = compareresults) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = cohens_d_deviation,
+                    fill = method),
+      stat = "identity",
+      position = "dodge"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    ) +
+    coord_cartesian(ylim = c(-0.35, 0.1)) +
+    theme_bw() +
+    scale_fill_manual(
+      values = c("aquamarine3", "darkgreen"),
+      labels = c("LDS Model", expression(paste(
+        italic("t"), "-Test"
+      )))
+    ) +
+    labs(y = "Median of Deviations of Estimated Effect Sizes from the True Values",
+         x = "Reliability",
+         fill = "") +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    )
+  
+  dsd <- ggplot(data = compareresults) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = cohens_d_sd,
+                    fill = method),
+      stat = "identity",
+      position = "dodge"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    ) +
+    coord_cartesian(ylim = c(0, 0.7)) +
+    theme_bw() +
+    scale_fill_manual(
+      values = c("aquamarine3", "darkgreen"),
+      labels = c("LDS Model", expression(paste(
+        italic("t"), "-Test"
+      )))
+    ) +
+    labs(y = "Standard Deviation of Estimated Effect Sizes",
+         x = "Reliability",
+         fill = "") +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    )
+  
+  MAD <- ggplot(data = compareresults) +
+    geom_bar(
+      mapping = aes(x = ntrials,
+                    y = MAD,
+                    fill = method),
+      stat = "identity",
+      position = "dodge"
+    ) +
+    facet_grid(
+      effect_size ~ sample_size,
+      scales = "fixed",
+      labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+    ) +
+    coord_cartesian(ylim = c(0, 0.55)) +
+    theme_bw() +
+    scale_fill_manual(
+      values = c("aquamarine3", "darkgreen"),
+      labels = c("LDS Model", expression(paste(
+        italic("t"), "-Test"
+      )))
+    ) +
+    labs(y = "MAD of Estimated Effect Sizes",
+         x = "Reliability",
+         fill = "") +
+    theme(
+      legend.position = "bottom",
+      legend.text = element_text(size = 8, family = "sans"),
+      text = element_text(size = fontsize, family = "sans"),
+      axis.text.x = element_text(size = fontsize, family = "sans"),
+      axis.title.x = element_text(size = fontsize, family = "sans"),
+      axis.text.y = element_text(size = fontsize, family = "sans"),
+      axis.title.y = element_text(size = fontsize, family = "sans")
+    )
+  
+  ggsave(
+    paste("type I error ", type, ".png", sep = ""),
+    plot = typeI,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 7
+  )
+  ggsave(
+    paste("power ", type, ".png", sep = ""),
+    plot = power,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 17
+  )
+  ggsave(
+    paste("power advantage ", type, ".png", sep = ""),
+    plot = poweradvantage,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 17
+  )
+  ggsave(
+    paste("d deviation ", type, ".png", sep = ""),
+    plot = ddeviation,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 17
+  )
+  ggsave(
+    paste("d sd ", type, ".png", sep = ""),
+    plot = dsd,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 17
+  )
+  ggsave(
+    paste("MAD ", type, ".png", sep = ""),
+    plot = MAD,
+    dpi = 300,
+    width = width,
+    units = "cm",
+    height = 17
+  )
+  
+  ## p rate for all conditions
+  # reference <-
+  # data.frame(effect_size = c(0),
+  # ref = c(0.05))
+  # ggplot(data = compareresults) +
+  # geom_bar(
+  # mapping = aes(
+  # x = ntrials,
+  # y = p_rate ,
+  # fill = method
+  # ),
+  # stat = "identity",
+  # position = "dodge"
+  # ) +
+  # facet_grid(effect_size ~ sample_size, scales = "fixed") +
+  # theme_bw() +
+  # ylim(0, 1) +
+  # labs(y = expression(paste("rate of ", italic("p"), " < 0.05"))) +
+  # scale_fill_manual(values = c("aquamarine3", "darkgreen")) +
+  # geom_hline(
+  # aes(yintercept = ref),
+  # reference,
+  # color = "purple",
+  # alpha = 0.6,
+  # lwd = 0.2
+  # )
+  # ggsave(paste("p_rate ", type, ".png", sep = ""))
+}
+
+
+files <-
+  # list.files(pattern="*compareresults.feather")
+  c(
+    "all compareresults.feather",
+    "impropercleaned compareresults.feather",
+    "allcleaned compareresults.feather",
+    "errorcleaned compareresults.feather"
+  )
+for (file in files) {
+  type <- strsplit(file, " ")[[1]][[1]]
+  assign(type, read_feather(file))
+  plotting(get(type), type)
+}
+
+error_improper_LDS <-
+  errorcleaned[errorcleaned$method == "LDS",]
+
+error_improper_LDS_long <- error_improper_LDS %>%
+  gather(
+    "error_rate",
+    "d_missing_rate",
+    "rest_improper_rate",
+    key = "type",
+    value = "rate"
+  ) %>%
+  mutate(type = factor(
+    type,
+    levels = c("rest_improper_rate",
+               "d_missing_rate",
+               "error_rate"),
+    labels = c(
+      "Improper Solutions\n(negative estimated\nvariances for other\nlatent variables)",
+      "Improper Solutions\n(negative estimated\nvariances for the\nlatent differences)",
+      "Estimation Errors"
+    )
+  ))
+
+outliers <- ggplot(data = error_improper_LDS_long) +
+  geom_bar(
+    mapping = aes(x = ntrials,
+                  y = rate,
+                  fill = type),
+    stat = "identity",
+    position = "stack"
+  ) +
+  facet_grid(
+    effect_size ~ sample_size,
+    scales = "fixed",
+    labeller = labeller(effect_size = paneltitle, sample_size = paneltitle)
+  ) +
+  theme_bw() +
+  scale_fill_manual(values = c("aquamarine3", "darkgreen", "darkseagreen1")) +
+  labs(y = "Rate of Estimation Errors\nand Improper Solutions",
+       x = "Reliability",
+       fill = "") +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 8, family = "sans"),
+    text = element_text(size = fontsize, family = "sans"),
+    axis.text.x = element_text(size = fontsize, family = "sans"),
+    axis.title.x = element_text(size = fontsize, family = "sans"),
+    axis.text.y = element_text(size = fontsize, family = "sans"),
+    axis.title.y = element_text(size = fontsize, family = "sans")
+  ) +
+  scale_y_continuous(labels = scales::percent)
+
+ggsave(
+  paste("Errors and Improper Solutions ",
+        type,
+        ".png",
+        sep = ""),
+  plot = outliers,
+  dpi = 300,
+  width = width,
+  units = "cm",
+  height = 17
+)
+
+## rate of errors and improper solutions
+# ggplot(data = error_improper_LDS) +
+# geom_bar(
+# mapping = aes(x = ntrials,
+# y = error_rate),
+# stat = "identity",
+# position = "dodge",
+# fill = "aquamarine3"
+# ) +
+# facet_grid(effect_size ~ sample_size, scales = "fixed") +
+# theme_bw() +
+# labs(y = "rate of estimation errors")
+# ggsave("errors.png")
+# ggplot(data = error_improper_LDS) +
+# geom_bar(
+# mapping = aes(x = ntrials,
+# y = improper_rate),
+# stat = "identity",
+# position = "dodge",
+# fill = "aquamarine3"
+# ) +
+# facet_grid(effect_size ~ sample_size, scales = "fixed") +
+# theme_bw() +
+# labs(y = "rate of improper solutions")
+# ggsave("improper solutions.png")
