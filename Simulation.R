@@ -2,7 +2,8 @@ library(MASS)
 library(lavaan)
 library(tidyverse)
 library(doRNG)
-library(doParallel)
+library(doParallel) 
+
 ##### data generation 
 ncores <- -1 + detectCores()
 
