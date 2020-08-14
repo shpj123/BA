@@ -2,4 +2,4 @@ Scripts for the bachelor thesis "The Influence of the Number of Trials on Reliab
 
 
 Monte Carlo simulation 
-script for the comparison using empirical data is on Github (Pan, 2020).
+script for the comparison using empirical data 
