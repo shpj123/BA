@@ -3,7 +3,7 @@ library(lavaan)
 library(foreign)
 
 dat_raw <-
-  read.spss("WS19empra.sav",
+  read.spss("WS19empra.sav", # please contact the me for the data set
             use.value.labels = T,
             to.data.frame = T)
 
@@ -94,7 +94,7 @@ create_model <- function(ntrials) {
   result
 }
 
-# 120 trials divided averagely into groups
+# 120 trials divided averagely into 6 groups
 group <- 6
 
 dat_grouped <- dat_120_long %>%
